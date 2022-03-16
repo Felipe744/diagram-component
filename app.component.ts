@@ -49,8 +49,9 @@ export class AppComponent {
 
   obj: NodeModel = {};
 
-  controler: number = 90;
+  controler: number = 0;
   controler2: number = -1;
+  lstAux: string[] = [];
 
   public newLayers: LayerModel = {
     id: 'layer1',
@@ -146,17 +147,23 @@ export class AppComponent {
   }
 
   createDiagramFlow(): void {
-    let incrementOffset = 0;
+    let incrementOffsetX = 0;
+    let incrementOffsetY = 0;
     this.getPhases().phase.forEach((p) => {
-      incrementOffset += 200;
-      this.createNodes(p, incrementOffset);
+      incrementOffsetX += 150;
+      incrementOffsetY += 50;
+      this.createNodes(p, incrementOffsetX, incrementOffsetY);
     });
     this.getPhases().phase.forEach((p) => {
       if (p.index < 9) this.createConnectors(p.index);
     });
   }
 
-  createNodes(phase: PhasesElements, incrementOffset: number): void {
+  createNodes(
+    phase: PhasesElements,
+    incrementOffsetX: number,
+    incrementOffsetY: number
+  ): void {
     let nodeModel: NodeModel;
     let label: string;
 
@@ -180,28 +187,28 @@ export class AppComponent {
       shape: nodeModel.shape,
       annotations: [{ content: label }],
       id: 'node' + phase.index,
-      offsetX: incrementOffset,
-      offsetY: 400,
+      offsetX: incrementOffsetX,
+      offsetY: incrementOffsetY,
       ports: [
         {
-            id: 'port' + phase.index + 0,
-            shape: 'Circle',
-            offset: { x: 0.3, y: 1 },
+          id: 'port' + phase.index + 0,
+          shape: 'Circle',
+          offset: { x: 0.3, y: 1 },
         },
         {
-            id: 'port' + phase.index + 1,
-            shape: 'Circle',
-            offset: { x: 0.4, y: 1 },
+          id: 'port' + phase.index + 1,
+          shape: 'Circle',
+          offset: { x: 0.4, y: 1 },
         },
         {
-            id: 'port' + phase.index + 2,
-            shape: 'Circle',
-            offset: { x: 0.5, y: 1 },
+          id: 'port' + phase.index + 2,
+          shape: 'Circle',
+          offset: { x: 0.5, y: 1 },
         },
         {
-            id: 'port' + phase.index + 3,
-            shape: 'Circle',
-            offset: { x: 0.6, y: 1 },
+          id: 'port' + phase.index + 3,
+          shape: 'Circle',
+          offset: { x: 0.6, y: 1 },
         },
         {
           id: 'port' + phase.index + 4,
@@ -214,7 +221,7 @@ export class AppComponent {
     if (phase.aproval) {
       this.controler2++;
       this.controler += 20;
-      this.createAprovalConnectors(phase.index, phase, this.controler);
+      this.createAprovalConnectors(phase.index);
     }
   }
 
@@ -223,29 +230,47 @@ export class AppComponent {
       id: 'connector' + index,
       sourceID: 'node' + index,
       targetID: 'node' + (index + 1),
+      annotations: [{ content: 'Sim' }],
+    });
+    this.diagram.connectors.find((c) => c.id === 'connector' + index).type =
+      'Orthogonal';
+    this.diagram.connectors.find((c) => c.id === 'connector' + index).segments =
+      [{ type: 'Orthogonal', length: this.controler, direction: 'Right' }];
+  }
+
+  aprovalConnectors(): void {
+    this.getPhases().phase.forEach((p) => {
+      if (p.aproval) {
+        this.createAprovalConnectors(p.index--);
+      }
     });
   }
 
-  createAprovalConnectors(
-    index: number,
-    phase: PhasesElements,
-    incrementalLength: number
-  ): void {
-    let connector1: ConnectorModel = {
+  createBasicNodes(): void {
+    this.diagram.addNode({
+      shape: { type: 'Basic', shape: 'Ellipse' },
+      annotations: [{ content: 'start' }],
+      id: 'basic1',
+      offsetX: -100,
+      offsetY: 400,
+    });
+  }
+
+  createAprovalConnectors(index: number): void {
+    this.diagram.addConnector({
       id: 'connector1' + index,
       sourceID: 'node' + index,
       targetID: 'node' + 0,
       targetPortID: 'port0' + this.controler2,
-    };
-
-    this.diagram.addConnector(connector1);
+      annotations: [{ content: 'Não' }],
+    });
     debugger;
     this.diagram.connectors.find((c) => c.id === 'connector1' + index).type =
       'Orthogonal';
     this.diagram.connectors.find(
       (c) => c.id === 'connector1' + index
     ).segments = [
-      { type: 'Orthogonal', length: incrementalLength, direction: 'Bottom' },
+      { type: 'Orthogonal', length: this.controler, direction: 'Bottom' },
     ];
   }
 
@@ -270,6 +295,8 @@ export class AppComponent {
     //let teste: CustomPort = {text: 'teste'}
     //this.createDiagram();
     this.createDiagramFlow();
+    this.createBasicNodes();
+    this.diagram.refresh();
     this.diagram.fitToPage();
   }
 
@@ -347,7 +374,7 @@ export class AppComponent {
     this.diagram.addConnector(connector3);
     this.diagram.connectors.find((c) => c.id === 'xD').type = 'Orthogonal';
     this.diagram.connectors.find((c) => c.id === 'xD').segments = [
-      { type: 'Orthogonal', length: 90, direction: 'Bottom' },
+      { type: 'Orthogonal', length: 30, direction: 'Bottom' },
     ];
     //this.diagram.connectors[0].targetPortID = 'port1';
     //this.diagram.getConnectorObject('xD').cornerRadius = 10;
