@@ -49,6 +49,9 @@ export class AppComponent {
 
   obj: NodeModel = {};
 
+  controler: number = 90;
+  controler2: number = -1;
+
   public newLayers: LayerModel = {
     id: 'layer1',
     visible: true,
@@ -70,33 +73,7 @@ export class AppComponent {
 
   public setNodeTemplate: Function = this.nodeTemplate.bind(this);
 
-  public node1Port: PointPortModel[] = [
-    {
-      id: 'port1',
-      shape: 'Circle',
-      offset: { x: 0, y: 0.5 },
-    },
-    {
-      id: 'port2',
-      shape: 'Circle',
-      offset: { x: 1, y: 0.5 },
-    },
-    {
-      id: 'port3',
-      shape: 'Circle',
-      offset: { x: 0.25, y: 1 },
-    },
-    {
-      id: 'port4',
-      shape: 'Circle',
-      offset: { x: 0.5, y: 1 },
-    },
-    {
-      id: 'port5',
-      shape: 'Circle',
-      offset: { x: 0.75, y: 1 },
-    },
-  ];
+  public node1Port: PointPortModel[] = [];
 
   getPhases(): Phases {
     let phases: Phases = {
@@ -205,20 +182,71 @@ export class AppComponent {
       id: 'node' + phase.index,
       offsetX: incrementOffset,
       offsetY: 400,
-      ports: this.node1Port,
+      ports: [
+        {
+            id: 'port' + phase.index + 0,
+            shape: 'Circle',
+            offset: { x: 0.3, y: 1 },
+        },
+        {
+            id: 'port' + phase.index + 1,
+            shape: 'Circle',
+            offset: { x: 0.4, y: 1 },
+        },
+        {
+            id: 'port' + phase.index + 2,
+            shape: 'Circle',
+            offset: { x: 0.5, y: 1 },
+        },
+        {
+            id: 'port' + phase.index + 3,
+            shape: 'Circle',
+            offset: { x: 0.6, y: 1 },
+        },
+        {
+          id: 'port' + phase.index + 4,
+          shape: 'Circle',
+          offset: { x: 0.7, y: 1 },
+        },
+      ],
     });
+
+    if (phase.aproval) {
+      this.controler2++;
+      this.controler += 20;
+      this.createAprovalConnectors(phase.index, phase, this.controler);
+    }
   }
 
   createConnectors(index: number, target?: string, port?: string): void {
     this.diagram.addConnector({
       id: 'connector' + index,
-      targetID: 'node' + (index + 1),
       sourceID: 'node' + index,
+      targetID: 'node' + (index + 1),
     });
   }
 
-  createAprovalConnectors(): void {
-      
+  createAprovalConnectors(
+    index: number,
+    phase: PhasesElements,
+    incrementalLength: number
+  ): void {
+    let connector1: ConnectorModel = {
+      id: 'connector1' + index,
+      sourceID: 'node' + index,
+      targetID: 'node' + 0,
+      targetPortID: 'port0' + this.controler2,
+    };
+
+    this.diagram.addConnector(connector1);
+    debugger;
+    this.diagram.connectors.find((c) => c.id === 'connector1' + index).type =
+      'Orthogonal';
+    this.diagram.connectors.find(
+      (c) => c.id === 'connector1' + index
+    ).segments = [
+      { type: 'Orthogonal', length: incrementalLength, direction: 'Bottom' },
+    ];
   }
 
   ngOnInit(): void {}
@@ -252,7 +280,33 @@ export class AppComponent {
       id: 'sourceId',
       offsetX: 100,
       offsetY: 200,
-      ports: this.node1Port,
+      ports: [
+        {
+          id: 'port1',
+          shape: 'Circle',
+          offset: { x: 0, y: 0.5 },
+        },
+        {
+          id: 'port2',
+          shape: 'Circle',
+          offset: { x: 1, y: 0.5 },
+        },
+        {
+          id: 'port3',
+          shape: 'Circle',
+          offset: { x: 0.8, y: 10 },
+        },
+        {
+          id: 'port4',
+          shape: 'Circle',
+          offset: { x: 0.5, y: 1 },
+        },
+        {
+          id: 'port5',
+          shape: 'Circle',
+          offset: { x: 0.75, y: 1 },
+        },
+      ],
     });
 
     this.diagram.addNode({
@@ -285,17 +339,17 @@ export class AppComponent {
       targetID: 'sourceId',
       sourceID: 'decision',
       //type: 'Orthogonal',
-      targetPortID: 'port2',
+      targetPortID: 'port3',
     };
 
     //this.diagram.addConnector(connector1);
     //this.diagram.addConnector(connector2);
     this.diagram.addConnector(connector3);
-    this.diagram.connectors[0].type = 'Orthogonal';
-    this.diagram.connectors[0].segments = [
+    this.diagram.connectors.find((c) => c.id === 'xD').type = 'Orthogonal';
+    this.diagram.connectors.find((c) => c.id === 'xD').segments = [
       { type: 'Orthogonal', length: 90, direction: 'Bottom' },
     ];
-    this.diagram.connectors[0].targetPortID = 'port1';
+    //this.diagram.connectors[0].targetPortID = 'port1';
     //this.diagram.getConnectorObject('xD').cornerRadius = 10;
     console.log(this.diagram.getConnectorObject('xD'));
     console.log(this.diagram.getConnectorObject('targetId'));
