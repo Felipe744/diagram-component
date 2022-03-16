@@ -13,6 +13,7 @@ import {
   PortVisibility,
   BasicShapeModel,
   LayoutModel,
+  ConnectorEditing,
 } from '@syncfusion/ej2-angular-diagrams';
 import {
   Diagram,
@@ -23,7 +24,6 @@ import {
   BpmnDiagrams,
 } from '@syncfusion/ej2-diagrams';
 import { ChangeEventArgs as CheckBoxChangeEventArgs } from '@syncfusion/ej2-buttons';
-Diagram.Inject(HierarchicalTree);
 Diagram.Inject(BpmnDiagrams);
 
 /**
@@ -70,22 +70,161 @@ export class AppComponent {
 
   public setNodeTemplate: Function = this.nodeTemplate.bind(this);
 
-  ngOnInit(): void {
-    document.getElementById('appearance').onclick =
-      this.documentClick.bind(this);
+  public node1Port: PointPortModel[] = [
+    {
+      id: 'port1',
+      shape: 'Circle',
+      offset: { x: 0, y: 0.5 },
+    },
+    {
+      id: 'port2',
+      shape: 'Circle',
+      offset: { x: 1, y: 0.5 },
+    },
+    {
+      id: 'port3',
+      shape: 'Circle',
+      offset: { x: 0.25, y: 1 },
+    },
+    {
+      id: 'port4',
+      shape: 'Circle',
+      offset: { x: 0.5, y: 1 },
+    },
+    {
+      id: 'port5',
+      shape: 'Circle',
+      offset: { x: 0.75, y: 1 },
+    },
+  ];
+
+  getPhases(): Phases {
+    let phases: Phases = {
+      phase: [
+        {
+          name: PhasesEnum.causeAnalysis,
+          enabled: true,
+          aproval: false,
+          index: 0,
+        },
+      ],
+    };
+
+    phases.phase.push({
+      name: PhasesEnum.causeAnalysisAproval,
+      enabled: true,
+      aproval: true,
+      index: 1,
+    });
+    phases.phase.push({
+      name: PhasesEnum.actionPlanElaboration,
+      enabled: true,
+      aproval: false,
+      index: 2,
+    });
+    phases.phase.push({
+      name: PhasesEnum.actionPlanElaborationAproval,
+      enabled: true,
+      aproval: true,
+      index: 3,
+    });
+    phases.phase.push({
+      name: PhasesEnum.actionPlanExecution,
+      enabled: true,
+      aproval: false,
+      index: 4,
+    });
+    phases.phase.push({
+      name: PhasesEnum.actionPlanExecutionAproval,
+      enabled: true,
+      aproval: true,
+      index: 5,
+    });
+    phases.phase.push({
+      name: PhasesEnum.effectivenessCheck,
+      enabled: true,
+      aproval: false,
+      index: 6,
+    });
+    phases.phase.push({
+      name: PhasesEnum.effectivenessCheckAproval,
+      enabled: true,
+      aproval: true,
+      index: 7,
+    });
+    phases.phase.push({
+      name: PhasesEnum.standardization,
+      enabled: true,
+      aproval: false,
+      index: 8,
+    });
+    phases.phase.push({
+      name: PhasesEnum.standardizationAproval,
+      enabled: true,
+      aproval: true,
+      index: 9,
+    });
+
+    return phases;
   }
+
+  createDiagramFlow(): void {
+    let incrementOffset = 0;
+    this.getPhases().phase.forEach((p) => {
+      incrementOffset += 200;
+      this.createNodes(p, incrementOffset);
+    });
+    this.getPhases().phase.forEach((p) => {
+      if (p.index < 9) this.createConnectors(p.index);
+    });
+  }
+
+  createNodes(phase: PhasesElements, incrementOffset: number): void {
+    let nodeModel: NodeModel;
+    let label: string;
+
+    if (!phase.aproval) {
+      nodeModel = {
+        shape: { type: 'Flow', shape: 'Terminator' },
+      };
+      label = 'teste';
+    } else {
+      nodeModel = {
+        shape: {
+          type: 'Bpmn',
+          shape: 'Gateway',
+          gateway: { type: 'Exclusive' },
+        },
+      };
+      label = '';
+    }
+
+    this.diagram.addNode({
+      shape: nodeModel.shape,
+      annotations: [{ content: label }],
+      id: 'node' + phase.index,
+      offsetX: incrementOffset,
+      offsetY: 400,
+      ports: this.node1Port,
+    });
+  }
+
+  createConnectors(index: number, target?: string, port?: string): void {
+    this.diagram.addConnector({
+      id: 'connector' + index,
+      targetID: 'node' + (index + 1),
+      sourceID: 'node' + index,
+    });
+  }
+
+  createAprovalConnectors(): void {
+      
+  }
+
+  ngOnInit(): void {}
 
   private nodeDefaults(node: NodeModel, diagram: Diagram): NodeModel {
     let obj: NodeModel = {};
-    if (node.id !== 'node1') {
-      //Set ports
-      obj.ports = this.getPorts(node);
-    }
-    if (node.id !== 'node6') {
-      obj.width = 80;
-      obj.style = { strokeWidth: 2, strokeColor: '#6F409F' };
-      obj.height = 35;
-    }
     return obj;
   }
 
@@ -99,42 +238,68 @@ export class AppComponent {
   }
 
   public created(): void {
-    this.createDiagram();
+    console.log(this.getPhases());
+    //let teste: CustomPort = {text: 'teste'}
+    //this.createDiagram();
+    this.createDiagramFlow();
     this.diagram.fitToPage();
   }
 
   createDiagram(): void {
     this.diagram.addNode({
-      shape: { type: 'Text', content: 'Basic Shapes' },
-      style: {
-        fontSize: 16,
-        fill: 'None',
-        fontFamily: 'sans-serif',
-        bold: true,
-        strokeWidth: 0,
-      },
-      offsetX: 300,
-      offsetY: 300,
+      shape: { type: 'Flow', shape: 'Terminator' },
+      annotations: [{ content: 'Terminator1' }],
+      id: 'sourceId',
+      offsetX: 100,
+      offsetY: 200,
+      ports: this.node1Port,
     });
 
     this.diagram.addNode({
-      shape: {
-        type: 'Bpmn',
-        shape: 'Event',
-        event: {
-          event: 'Start',
-          trigger: 'None',
-        },
-      },
-      offsetX: 200,
+      shape: { type: 'Flow', shape: 'Terminator' },
+      annotations: [{ content: 'Terminator2' }],
+      id: 'targetId',
+      offsetX: 400,
       offsetY: 200,
     });
 
-    let connector: ConnectorModel = {
-        shape: 
+    this.diagram.addNode({
+      shape: { type: 'Bpmn', shape: 'Gateway', gateway: { type: 'Exclusive' } },
+      id: 'decision',
+      offsetX: 250,
+      offsetY: 200,
+    });
+
+    let connector1: ConnectorModel = {
+      targetID: 'decision',
+      sourceID: 'targetId',
     };
 
-    this.diagram.addConnector(connector);
+    let connector2: ConnectorModel = {
+      targetID: 'sourceId',
+      sourceID: 'decision',
+    };
+
+    let connector3: ConnectorModel = {
+      id: 'xD',
+      targetID: 'sourceId',
+      sourceID: 'decision',
+      //type: 'Orthogonal',
+      targetPortID: 'port2',
+    };
+
+    //this.diagram.addConnector(connector1);
+    //this.diagram.addConnector(connector2);
+    this.diagram.addConnector(connector3);
+    this.diagram.connectors[0].type = 'Orthogonal';
+    this.diagram.connectors[0].segments = [
+      { type: 'Orthogonal', length: 90, direction: 'Bottom' },
+    ];
+    this.diagram.connectors[0].targetPortID = 'port1';
+    //this.diagram.getConnectorObject('xD').cornerRadius = 10;
+    console.log(this.diagram.getConnectorObject('xD'));
+    console.log(this.diagram.getConnectorObject('targetId'));
+    console.log(this.diagram.getConnectorObject('sourceId'));
   }
 
   public nodeDefaultsTeste(obj: NodeModel): NodeModel {
@@ -143,19 +308,6 @@ export class AppComponent {
   }
 
   private nodeTemplate(node: NodeModel): StackPanel {
-    if (node.id === 'node6') {
-      let canvas: StackPanel = new StackPanel();
-      canvas.id = randomId();
-      canvas.children = [
-        this.getTextElement('Events', '#a6a1e0'),
-        this.getTextElement('Emails', '#db8ec9'),
-        this.getTextElement('Calls', '#db8ec9'),
-        this.getTextElement('Smart Contents', '#db8ec9'),
-      ];
-      canvas.style.strokeWidth = 0;
-      canvas.style.fill = '#e6e0eb';
-      return canvas;
-    }
     return null;
   }
 
@@ -229,120 +381,28 @@ export class AppComponent {
     textElement.relativeMode = 'Object';
     return textElement;
   }
+}
 
-  public onChangeLock(args: CheckBoxChangeEventArgs): void {
-    for (let i: number = 0; i < this.diagram.nodes.length; i++) {
-      let node: NodeModel = this.diagram.nodes[i];
-      if (args.checked) {
-        node.constraints =
-          NodeConstraints.PointerEvents | NodeConstraints.Select;
-      } else {
-        node.constraints = NodeConstraints.Default & ~NodeConstraints.ReadOnly;
-      }
-      this.diagram.dataBind();
-    }
-    for (let i: number = 0; i < this.diagram.connectors.length; i++) {
-      let connector: ConnectorModel = this.diagram.connectors[i];
-      if (args.checked) {
-        connector.constraints =
-          ConnectorConstraints.PointerEvents | ConnectorConstraints.Select;
-      } else {
-        connector.constraints =
-          ConnectorConstraints.Default & ~ConnectorConstraints.ReadOnly;
-      }
-      this.diagram.dataBind();
-    }
-  }
-  private documentClick(args: MouseEvent): void {
-    let target: HTMLElement = args.target as HTMLElement;
-    // custom code start
-    let selectedElement: HTMLCollection =
-      document.getElementsByClassName('e-selected-style');
-    if (selectedElement.length) {
-      selectedElement[0].classList.remove('e-selected-style');
-    }
-    // custom code end
-    if (target.className === 'image-pattern-style') {
-      switch (target.id) {
-        case 'straightConnector':
-          this.applyConnectorStyle(false, false, false, 'Straight', 1);
-          break;
-        case 'orthogonalConnector':
-          this.applyConnectorStyle(false, false, false, 'Orthogonal', 1);
-          break;
-        case 'bezierConnector':
-          this.applyConnectorStyle(false, false, false, 'Bezier', 1);
-          break;
-        case 'straightConnectorWithStroke':
-          this.applyConnectorStyle(false, false, false, 'Straight');
-          break;
-        case 'orthogonalConnectorWithStroke':
-          this.applyConnectorStyle(false, false, false, 'Orthogonal');
-          break;
-        case 'bezierConnectorWithStroke':
-          this.applyConnectorStyle(false, false, false, 'Bezier');
-          break;
-        case 'straightConnectorWithDasharray':
-          this.applyConnectorStyle(true, false, false, 'Straight');
-          break;
-        case 'orthogonalConnectorWithDasharray':
-          this.applyConnectorStyle(true, false, false, 'Orthogonal');
-          break;
-        case 'bezierConnectorWithDasharray':
-          this.applyConnectorStyle(true, false, false, 'Bezier');
-          break;
-        case 'cornerRadious':
-          this.applyConnectorStyle(false, false, true, 'Orthogonal');
-          break;
-        case 'sourceDecorator':
-          this.applyConnectorStyle(false, true, false, 'Straight');
-          break;
-        case 'sourceDecoratorWithDasharray':
-          this.applyConnectorStyle(true, true, false, 'Straight');
-          break;
-      }
-      // custom code start
-      target.classList.add('e-selected-style');
-      // custom code end
-    }
-  }
-  private applyConnectorStyle(
-    dashedLine: boolean,
-    sourceDec: boolean,
-    isRounded: boolean,
-    type: Segments,
-    strokeWidth?: number
-  ): void {
-    for (let i: number = 0; i < this.diagram.connectors.length; i++) {
-      this.diagram.connectors[i].style.strokeWidth = strokeWidth
-        ? strokeWidth
-        : 2;
-      this.diagram.connectors[i].type = type;
-      this.diagram.connectors[i].cornerRadius = isRounded ? 5 : 0;
-      this.diagram.connectors[i].style.strokeDashArray = dashedLine
-        ? '5,5'
-        : '';
-      if (sourceDec) {
-        this.diagram.connectors[i].sourceDecorator = {
-          style: {
-            strokeColor: '#6f409f',
-            fill: '#6f409f',
-            strokeWidth: 2,
-          },
-          shape: 'Circle',
-        };
-      } else {
-        this.diagram.connectors[i].sourceDecorator = { shape: 'None' };
-      }
-      this.diagram.connectors[i].targetDecorator = {
-        style: {
-          strokeColor: '#6f409f',
-          fill: '#6f409f',
-          strokeWidth: 2,
-        },
-        shape: 'Arrow',
-      };
-      this.diagram.dataBind();
-    }
-  }
+export interface Phases {
+  phase: PhasesElements[];
+}
+
+interface PhasesElements {
+  name: PhasesEnum;
+  enabled: boolean;
+  aproval: boolean;
+  index: number;
+}
+
+export enum PhasesEnum {
+  causeAnalysis = 'AnaliseDeCausa',
+  causeAnalysisAproval = 'AnaliseDeCausaAprovacao',
+  actionPlanElaboration = 'ElaboracaoDoPlanoDeAcao',
+  actionPlanElaborationAproval = 'ElaboracaoDoPlanoDeAcaoAprovacao',
+  actionPlanExecution = 'ExecucaoDoPlanoDeAcao',
+  actionPlanExecutionAproval = 'ExecucaoDoPlanoDeAcaoAprovacao',
+  effectivenessCheck = 'VerificacaoDeEficacia',
+  effectivenessCheckAproval = 'VerificacaoDeEficaciaAprovacao',
+  standardization = 'Padronizacao',
+  standardizationAproval = 'PadronizacaoAprovacao',
 }
