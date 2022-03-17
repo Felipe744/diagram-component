@@ -22,6 +22,7 @@ import {
   randomId,
   LayerModel,
   BpmnDiagrams,
+  DiagramConstraints,
 } from '@syncfusion/ej2-diagrams';
 import { ChangeEventArgs as CheckBoxChangeEventArgs } from '@syncfusion/ej2-buttons';
 Diagram.Inject(BpmnDiagrams);
@@ -73,7 +74,7 @@ export class AppComponent {
   public getConnectorDefaults: Function = this.connectorDefaults.bind(this);
 
   public setNodeTemplate: Function = this.nodeTemplate.bind(this);
-
+  public constraints: DiagramConstraints;
   public node1Port: PointPortModel[] = [];
 
   getPhases(): Phases {
@@ -191,12 +192,12 @@ export class AppComponent {
       offsetY: incrementOffsetY,
       ports: [
         {
-          id: 'port' + phase.index + 0,
+          id: 'port' + phase.index + 4,
           shape: 'Circle',
           offset: { x: 0.3, y: 1 },
         },
         {
-          id: 'port' + phase.index + 1,
+          id: 'port' + phase.index + 3,
           shape: 'Circle',
           offset: { x: 0.4, y: 1 },
         },
@@ -206,18 +207,22 @@ export class AppComponent {
           offset: { x: 0.5, y: 1 },
         },
         {
-          id: 'port' + phase.index + 3,
+          id: 'port' + phase.index + 1,
           shape: 'Circle',
           offset: { x: 0.6, y: 1 },
         },
         {
-          id: 'port' + phase.index + 4,
+          id: 'port' + phase.index + 0,
           shape: 'Circle',
           offset: { x: 0.7, y: 1 },
         },
       ],
     });
 
+    //this.getPhases().phase.forEach((p) => {
+    //    if (p.index  phase.index)
+    //        this.createConnectors(p.index);
+    //  });
     if (phase.aproval) {
       this.controler2++;
       this.controler += 20;
@@ -241,7 +246,7 @@ export class AppComponent {
   aprovalConnectors(): void {
     this.getPhases().phase.forEach((p) => {
       if (p.aproval) {
-        this.createAprovalConnectors(p.index--);
+        this.createAprovalConnectors(p.index);
       }
     });
   }
@@ -257,24 +262,33 @@ export class AppComponent {
   }
 
   createAprovalConnectors(index: number): void {
-    this.diagram.addConnector({
-      id: 'connector1' + index,
-      sourceID: 'node' + index,
-      targetID: 'node' + 0,
-      targetPortID: 'port0' + this.controler2,
-      annotations: [{ content: 'Não' }],
+    this.getPhases().phase.forEach((p) => {
+      if (p.index < index && !p.aproval) {
+        this.diagram.addConnector({
+          id: 'connector1' + p.index + this.controler2,
+          sourceID: 'node' + index,
+          targetID: 'node' + p.index,
+          targetPortID: 'port' + p.index + this.controler2,
+          annotations: [{ content: 'Não' }],
+          //bridgeSpace: 100,
+        });
+        this.diagram.connectors.find(
+          (c) => c.id === 'connector1' + p.index + this.controler2
+        ).type = 'Orthogonal';
+        debugger;
+        this.diagram.connectors.find(
+          (c) => c.id === 'connector1' + p.index + this.controler2
+        ).segments = [
+          { type: 'Orthogonal', length: this.controler, direction: 'Bottom' },
+        ];
+      }
     });
-    debugger;
-    this.diagram.connectors.find((c) => c.id === 'connector1' + index).type =
-      'Orthogonal';
-    this.diagram.connectors.find(
-      (c) => c.id === 'connector1' + index
-    ).segments = [
-      { type: 'Orthogonal', length: this.controler, direction: 'Bottom' },
-    ];
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.constraints =
+DiagramConstraints.Bridging;
+  }
 
   private nodeDefaults(node: NodeModel, diagram: Diagram): NodeModel {
     let obj: NodeModel = {};
