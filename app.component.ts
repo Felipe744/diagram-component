@@ -170,7 +170,7 @@ export class AppComponent {
 
     if (!phase.aproval) {
       nodeModel = {
-        shape: { type: 'Flow', shape: 'Terminator' },
+        shape: { type: 'Bpmn', shape: 'Activity', activity: { activity: 'Task' }},
       };
       label = 'teste';
     } else {
@@ -190,6 +190,7 @@ export class AppComponent {
       id: 'node' + phase.index,
       offsetX: incrementOffsetX,
       offsetY: incrementOffsetY,
+      width: 100,
       ports: [
         {
           id: 'port' + phase.index + 4,
